@@ -23,10 +23,13 @@ Contact: bt-trx.com, mail@bt-trx.com
 #define PIN_LED1 4
 #define PIN_BTN0 23
 
+#define SERIAL_DBG Serial
+#define SERIAL_BT Serial3
+
 void setup() {
   // Open serial communications and wait for port to open:
-  Serial.begin(115200);
-  Serial3.begin(115200);
+  SERIAL_DBG.begin(115200);
+  SERIAL_BT.begin(115200);
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
@@ -42,11 +45,11 @@ void setup() {
 
 void loop() { // run over and over
   // Pipe serial data from/to WT32i to USB Serial
-  if (Serial3.available()) {
-    Serial.write(Serial3.read());
+  if (SERIAL_BT.available()) {
+    SERIAL_DBG.write(SERIAL_BT.read());
   }
-  if (Serial.available()) {
-    Serial3.write(Serial.read());
+  if (SERIAL_DBG.available()) {
+    SERIAL_BT.write(SERIAL_DBG.read());
   }
 
   // If the button is pressed, light up green LED
