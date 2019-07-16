@@ -18,22 +18,26 @@ Copyright (C) 2019 Christian Obersteiner (DL1COM), Andreas Müller (DC1MIL)
 Contact: bt-trx.com, mail@bt-trx.com
 */
 
-#define PIN_WT32_ONOFF 13
-#define PIN_LED0 3
-#define PIN_LED1 4
-#define PIN_BTN0 23
+#define PIN_BTN0 25
+#define PIN_LED0 26
+#define PIN_LED1 27
+#define PIN_WT32_ONOFF 23
 
 #define SERIAL_DBG Serial
-#define SERIAL_BT Serial3
+#define SERIAL_BT Serial2
+
+
+// https://quadmeup.com/arduino-esp32-and-3-hardware-serial-ports/
 
 void setup() {
   // Open serial communications and wait for port to open:
   SERIAL_DBG.begin(115200);
-  SERIAL_BT.begin(115200);
-  while (!Serial) {
+  //SERIAL_BT.begin(115200);
+  SERIAL_BT.begin(115200, SERIAL_8N1, 32, 33);
+  while (!SERIAL_DBG) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
-  Serial.println("bt-trx Hardware Test");
+  SERIAL_DBG.println("bt-trx Hardware Test");
   pinMode(PIN_WT32_ONOFF, OUTPUT);
   pinMode(PIN_LED0, OUTPUT);
   pinMode(PIN_LED1, OUTPUT);
