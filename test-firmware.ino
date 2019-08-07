@@ -18,33 +18,59 @@ Copyright (C) 2019 Christian Obersteiner (DL1COM), Andreas Müller (DC1MIL)
 Contact: bt-trx.com, mail@bt-trx.com
 */
 
-#define PIN_BTN0 25
-#define PIN_LED0 26
-#define PIN_LED1 27
-#define PIN_WT32_ONOFF 23
+//#define TEENSY  // Board: "Teensy 3.2 / 3.1"
+#define ESP32     // Board: "Node32s"
 
-#define SERIAL_DBG Serial
-#define SERIAL_BT Serial2
+#ifdef ESP32  
+  #define PIN_WT32_RESET 23 // Active Low
+  #define PIN_LED_BLUE 26   // Active High
+  #define PIN_LED_GREEN 27  // Active High
+  #define PIN_BTN0 25       // Active Low
+  #define PIN_PTT_IN 5      // Active Low
+  #define PIN_PTT_OUT 6     // Active Low  
 
+  #define SERIAL_DBG Serial
+  #define SERIAL_BT Serial2
+#endif
+#ifdef TEENSY
+  #define PIN_WT32_RESET 13 // Active Low
+  #define PIN_LED_BLUE 3    // Active High
+  #define PIN_LED_GREEN 4   // Active High
+  #define PIN_BTN0 23       // Active Low
+  #define PIN_PTT_IN 5      // Active Low
+  #define PIN_PTT_OUT 6     // Active Low
 
-// https://quadmeup.com/arduino-esp32-and-3-hardware-serial-ports/
+  #define SERIAL_DBG Serial
+  #define SERIAL_BT Serial3
+#endif
 
 void setup() {
   // Open serial communications and wait for port to open:
   SERIAL_DBG.begin(115200);
-  //SERIAL_BT.begin(115200);
-  SERIAL_BT.begin(115200, SERIAL_8N1, 32, 33);
-  while (!SERIAL_DBG) {
-    ; // wait for serial port to connect. Needed for native USB port only
-  }
+
+  #ifdef ESP32
+    // https://quadmeup.com/arduino-esp32-and-3-hardware-serial-ports/
+    SERIAL_BT.begin(115200, SERIAL_8N1, 32, 33);
+  #endif
+  #ifdef TEENSY
+    SERIAL_BT.begin(115200);
+    while (!SERIAL_DBG) {
+      // wait for serial port to connect. Needed for native USB port only
+    }
+  #endif
+
   SERIAL_DBG.println("bt-trx Hardware Test");
-  pinMode(PIN_WT32_ONOFF, OUTPUT);
-  pinMode(PIN_LED0, OUTPUT);
-  pinMode(PIN_LED1, OUTPUT);
+  pinMode(PIN_WT32_RESET, OUTPUT);
+  pinMode(PIN_LED_BLUE, OUTPUT);
+  pinMode(PIN_LED_GREEN, OUTPUT);
   pinMode(PIN_BTN0, INPUT);
+  pinMode(PIN_PTT_IN, INPUT);
+  pinMode(PIN_PTT_OUT, OUTPUT);
+
+  digitalWrite(PIN_PTT_OUT, HIGH);
 
   // Get WT32i out of reset
-  digitalWrite(PIN_WT32_ONOFF, HIGH);
+  digitalWrite(PIN_WT32_RESET, HIGH);
 }
 
 void loop() { // run over and over
@@ -56,13 +82,22 @@ void loop() { // run over and over
     SERIAL_BT.write(SERIAL_DBG.read());
   }
 
-  // If the button is pressed, light up green LED
-  // If the button is not pressen, light up blue LED
+  // If the button is not pressed, light up green LED
+  // If the button is pressed, light up blue LED
   if (digitalRead(PIN_BTN0)) {
-    digitalWrite(PIN_LED0, LOW);
-    digitalWrite(PIN_LED1, HIGH);
+    digitalWrite(PIN_LED_BLUE, LOW);    // off
+    digitalWrite(PIN_LED_GREEN, HIGH);  // on
   } else {
-    digitalWrite(PIN_LED0, HIGH);
-    digitalWrite(PIN_LED1, LOW);
+    digitalWrite(PIN_LED_BLUE, HIGH);   // on
+    digitalWrite(PIN_LED_GREEN, LOW);   // off
+  }
+
+  // If PTT is pressed, light up blue LED and control PTT out accordingly
+  if (digitalRead(PIN_PTT_IN)) {
+    digitalWrite(PIN_LED_BLUE, LOW);
+    digitalWrite(PIN_PTT_OUT, HIGH);
+  } else {
+    digitalWrite(PIN_LED_BLUE, HIGH);  
+    digitalWrite(PIN_PTT_OUT, LOW);
   }
 }
