@@ -22,12 +22,14 @@ Contact: bt-trx.com, mail@bt-trx.com
 #define ESP32     // Board: "Node32s"
 
 #ifdef ESP32  
-  #define PIN_WT32_RESET 23 // Active Low
-  #define PIN_LED_BLUE 26   // Active High
-  #define PIN_LED_GREEN 27  // Active High
-  #define PIN_BTN0 25       // Active Low
-  #define PIN_PTT_IN 5      // Active Low
-  #define PIN_PTT_OUT 6     // Active Low  
+  #define PIN_WT32_RESET 4   // Active Low
+  #define PIN_LED_BLUE 25    // Active High
+  #define PIN_LED_GREEN 26   // Active High
+  #define PIN_BTN0 0         // Active Low
+  #define PIN_PTT_IN 32      // Active Low
+  #define PIN_PTT_OUT 33     // Active Low  
+  #define PIN_WT32_RX 16     // Serial2
+  #define PIN_WT32_TX 17     // Serial2
 
   #define SERIAL_DBG Serial
   #define SERIAL_BT Serial2
@@ -50,7 +52,7 @@ void setup() {
 
   #ifdef ESP32
     // https://quadmeup.com/arduino-esp32-and-3-hardware-serial-ports/
-    SERIAL_BT.begin(115200, SERIAL_8N1, 32, 33);
+    SERIAL_BT.begin(115200, SERIAL_8N1, PIN_WT32_RX, PIN_WT32_TX);
   #endif
   #ifdef TEENSY
     SERIAL_BT.begin(115200);
