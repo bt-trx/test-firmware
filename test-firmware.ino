@@ -18,29 +18,51 @@ Copyright (C) 2019 Christian Obersteiner (DL1COM), Andreas Müller (DC1MIL)
 Contact: bt-trx.com, mail@bt-trx.com
 */
 
-#define PIN_WT32_ONOFF 13 // Active Low
-#define PIN_LED_BLUE 3    // Active High
-#define PIN_LED_GREEN 4   // Active High
-#define PIN_BTN0 23       // Active Low
-#define PIN_PTT_IN 5      // Active Low
-#define PIN_PTT_OUT 6     // Active Low
+//#define TEENSY  // Board: "Teensy 3.2 / 3.1"
+#define ESP32     // Board: "Node32s"
 
-#define SERIAL_DBG Serial
-#define SERIAL_BT Serial3
+#ifdef ESP32  
+  #define PIN_WT32_RESET 4   // Active Low
+  #define PIN_LED_BLUE 25    // Active High
+  #define PIN_LED_GREEN 26   // Active High
+  #define PIN_BTN0 0         // Active Low
+  #define PIN_PTT_IN 32      // Active Low
+  #define PIN_PTT_OUT 33     // Active Low  
+  #define PIN_WT32_RX 16     // Serial2
+  #define PIN_WT32_TX 17     // Serial2
+
+  #define SERIAL_DBG Serial
+  #define SERIAL_BT Serial2
+#endif
+#ifdef TEENSY
+  #define PIN_WT32_RESET 13 // Active Low
+  #define PIN_LED_BLUE 3    // Active High
+  #define PIN_LED_GREEN 4   // Active High
+  #define PIN_BTN0 23       // Active Low
+  #define PIN_PTT_IN 5      // Active Low
+  #define PIN_PTT_OUT 6     // Active Low
+
+  #define SERIAL_DBG Serial
+  #define SERIAL_BT Serial3
+#endif
 
 void setup() {
   // Open serial communications and wait for port to open:
   SERIAL_DBG.begin(115200);
-  SERIAL_BT.begin(115200);
 
-  // Teensy specific, if we want to use the serial port
-  /*
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
-  }*/
+  #ifdef ESP32
+    // https://quadmeup.com/arduino-esp32-and-3-hardware-serial-ports/
+    SERIAL_BT.begin(115200, SERIAL_8N1, PIN_WT32_RX, PIN_WT32_TX);
+  #endif
+  #ifdef TEENSY
+    SERIAL_BT.begin(115200);
+    while (!SERIAL_DBG) {
+      // wait for serial port to connect. Needed for native USB port only
+    }
+  #endif
 
-  Serial.println("bt-trx Hardware Test");
-  pinMode(PIN_WT32_ONOFF, OUTPUT);
+  SERIAL_DBG.println("bt-trx Hardware Test");
+  pinMode(PIN_WT32_RESET, OUTPUT);
   pinMode(PIN_LED_BLUE, OUTPUT);
   pinMode(PIN_LED_GREEN, OUTPUT);
   pinMode(PIN_BTN0, INPUT);
@@ -50,7 +72,7 @@ void setup() {
   digitalWrite(PIN_PTT_OUT, HIGH);
 
   // Get WT32i out of reset
-  digitalWrite(PIN_WT32_ONOFF, HIGH);
+  digitalWrite(PIN_WT32_RESET, HIGH);
 }
 
 void loop() { // run over and over
