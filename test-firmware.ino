@@ -18,33 +18,12 @@ Copyright (C) 2019 Christian Obersteiner (DL1COM), Andreas Müller (DC1MIL)
 Contact: bt-trx.com, mail@bt-trx.com
 */
 
-//#define TEENSY  // Board: "Teensy 3.2 / 3.1"
-#define ESP32     // Board: "Node32s"
+#define ESP32 // TEENSY
 
-#ifdef ESP32  
-  #define PIN_WT32_RESET 4   // Active Low
-  #define PIN_LED_BLUE 25    // Active High
-  #define PIN_LED_GREEN 26   // Active High
-  #define PIN_BTN0 0         // Active Low
-  #define PIN_PTT_IN 32      // Active Low
-  #define PIN_PTT_OUT 33     // Active Low  
-  #define PIN_WT32_RX 16     // Serial2
-  #define PIN_WT32_TX 17     // Serial2
+#include "pins.h"
 
-  #define SERIAL_DBG Serial
-  #define SERIAL_BT Serial2
-#endif
-#ifdef TEENSY
-  #define PIN_WT32_RESET 13 // Active Low
-  #define PIN_LED_BLUE 3    // Active High
-  #define PIN_LED_GREEN 4   // Active High
-  #define PIN_BTN0 23       // Active Low
-  #define PIN_PTT_IN 5      // Active Low
-  #define PIN_PTT_OUT 6     // Active Low
-
-  #define SERIAL_DBG Serial
-  #define SERIAL_BT Serial3
-#endif
+ulong result = 0;
+ulong counter = 0;
 
 void setup() {
   // Open serial communications and wait for port to open:
@@ -68,11 +47,19 @@ void setup() {
   pinMode(PIN_BTN0, INPUT);
   pinMode(PIN_PTT_IN, INPUT);
   pinMode(PIN_PTT_OUT, OUTPUT);
+  pinMode(PIN_PTT_LED, OUTPUT);
+  pinMode(PIN_HW_VER, INPUT);
+  pinMode(PIN_VOX_IN, INPUT);
 
+  digitalWrite(PIN_LED_GREEN, LOW);
+  digitalWrite(PIN_LED_BLUE, LOW);
+  digitalWrite(PIN_PTT_LED, LOW);
   digitalWrite(PIN_PTT_OUT, HIGH);
 
   // Get WT32i out of reset
   digitalWrite(PIN_WT32_RESET, HIGH);
+
+  analogSetPinAttenuation(PIN_VOX_IN, ADC_0db);
 }
 
 void loop() { // run over and over
@@ -84,22 +71,32 @@ void loop() { // run over and over
     SERIAL_BT.write(SERIAL_DBG.read());
   }
 
-  // If the button is not pressed, light up green LED
-  // If the button is pressed, light up blue LED
+  result += analogRead(PIN_VOX_IN);
+  counter += 1;
+  if(counter == 30000) {    
+    SERIAL_DBG.print("HW_VER: ");
+    SERIAL_DBG.print(analogRead(PIN_HW_VER));
+    SERIAL_DBG.print("\tVOX_IN: ");
+    SERIAL_DBG.println(result/counter);
+    
+    counter = 0;
+    result = 0;
+    }
+
   if (digitalRead(PIN_BTN0)) {
-    digitalWrite(PIN_LED_BLUE, LOW);    // off
-    digitalWrite(PIN_LED_GREEN, HIGH);  // on
+    digitalWrite(PIN_LED_GREEN, LOW);
   } else {
-    digitalWrite(PIN_LED_BLUE, HIGH);   // on
-    digitalWrite(PIN_LED_GREEN, LOW);   // off
+    digitalWrite(PIN_LED_GREEN, HIGH);
   }
 
   // If PTT is pressed, light up blue LED and control PTT out accordingly
   if (digitalRead(PIN_PTT_IN)) {
     digitalWrite(PIN_LED_BLUE, LOW);
-    digitalWrite(PIN_PTT_OUT, HIGH);
+    digitalWrite(PIN_PTT_LED, LOW);
+    digitalWrite(PIN_PTT_OUT, HIGH);    
   } else {
-    digitalWrite(PIN_LED_BLUE, HIGH);  
-    digitalWrite(PIN_PTT_OUT, LOW);
+    digitalWrite(PIN_LED_BLUE, HIGH);
+    digitalWrite(PIN_PTT_LED, HIGH); 
+    digitalWrite(PIN_PTT_OUT, LOW);    
   }
 }
